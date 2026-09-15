@@ -5,12 +5,12 @@
 
 // ------- Active Alerts -------
 export const ALERTS = [
-  { id: 'a1', type: 'critical', icon: '🔥', title: 'Fire Alert — Simlipal NP', sub: 'Odisha · 2,400 ha affected', time: '4m ago', lat: 21.6, lng: 86.5 },
-  { id: 'a2', type: 'critical', icon: '🌳', title: 'Rapid Deforestation — Assam', sub: 'Karbi Anglong · 340 ha/week', time: '18m ago', lat: 26.3, lng: 92.8 },
-  { id: 'a3', type: 'warning', icon: '⚠️', title: 'Tiger Corridor Breach', sub: 'Pench–Kanha · human encroachment', time: '1h ago', lat: 22.2, lng: 80.1 },
-  { id: 'a4', type: 'warning', icon: '🦅', title: 'Species Habitat Loss', sub: 'Great Hornbill · Silent Valley fragmented', time: '2h ago', lat: 11.1, lng: 76.4 },
-  { id: 'a5', type: 'info', icon: '💧', title: 'Drought Stress Detected', sub: 'Rajasthan–MP border · NDVI dropped 18%', time: '3h ago', lat: 24.5, lng: 76.0 },
-  { id: 'a6', type: 'critical', icon: '🔥', title: 'Fire Alert — Bandipur TR', sub: 'Karnataka · 860 ha under threat', time: '5h ago', lat: 11.7, lng: 76.6 },
+  { id: 'a1', type: 'critical', title: 'Fire Alert — Simlipal NP', sub: 'Odisha · 2,400 ha affected', time: '4m ago', lat: 21.6, lng: 86.5 },
+  { id: 'a2', type: 'critical', title: 'Rapid Deforestation — Assam', sub: 'Karbi Anglong · 340 ha/week', time: '18m ago', lat: 26.3, lng: 92.8 },
+  { id: 'a3', type: 'warning', title: 'Tiger Corridor Breach', sub: 'Pench–Kanha · human encroachment', time: '1h ago', lat: 22.2, lng: 80.1 },
+  { id: 'a4', type: 'warning', title: 'Species Habitat Loss', sub: 'Great Hornbill · Silent Valley fragmented', time: '2h ago', lat: 11.1, lng: 76.4 },
+  { id: 'a5', type: 'info', title: 'Drought Stress Detected', sub: 'Rajasthan–MP border · NDVI dropped 18%', time: '3h ago', lat: 24.5, lng: 76.0 },
+  { id: 'a6', type: 'critical', title: 'Fire Alert — Bandipur TR', sub: 'Karnataka · 860 ha under threat', time: '5h ago', lat: 11.7, lng: 76.6 },
 ];
 
 // ------- Protected Zones -------

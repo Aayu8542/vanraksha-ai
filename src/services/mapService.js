@@ -37,7 +37,7 @@ export function createForestMap(container, { year, onCoords, onMapClick, onSelec
 
 function addNDVI(map, year) {
   map.addSource('ndvi-source', { type: 'geojson', data: generateNDVIGrid(year) });
-  map.addLayer({ id: 'ndvi-fill', type: 'fill', source: 'ndvi-source', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.45 } });
+  map.addLayer({ id: 'ndvi-fill', type: 'fill', source: 'ndvi-source', layout: { visibility: 'none' }, paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.45 } });
   map.on('click', 'ndvi-fill', e => {
     const p = e.features?.[0]?.properties;
     if (!p) return;
