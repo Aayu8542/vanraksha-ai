@@ -1,0 +1,30 @@
+# VanaRaksha AI - Stage 1 Early Detection Config
+
+region:
+  name: "Odisha"
+  bbox: [81.3, 17.7, 87.5, 22.6]  # [min_lon, min_lat, max_lon, max_lat]
+
+date_range:
+  start: "2023-03-01"
+  end: "2023-06-30"  # Typical fire season
+
+grid:
+  resolution_km: 4.0  # Matches INSAT/GOES coarse resolution
+  time_step_mins: 15  # 15 to 30 min intervals
+
+data_sources:
+  firms_map_key: "YOUR_FIRMS_MAP_KEY_HERE"  # Add your API key here
+  goes_satellite: "goes16"  # stand-in for INSAT
+  goes_product: "ABI-L2-FDC" # Fire / Hot Spot Characterization
+
+# Weights for the scoring system (Threshold/Physics-based, sum = 1.0)
+scoring_weights:
+  thermal_anomaly: 0.5   # 50% weight: Direct thermal signature (satellite detection)
+  ndvi_dryness: 0.2      # 20% weight: Low NDVI indicates dry vegetation (fuel load)
+  days_since_rain: 0.2   # 20% weight: CHIRPS dryness indicator (weather factor)
+  slope: 0.1             # 10% weight: Steeper slopes spread fire faster
+
+thresholds:
+  low_confidence: 0.60
+  medium_confidence: 0.75
+  high_confidence: 0.90
