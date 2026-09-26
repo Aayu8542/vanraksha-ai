@@ -27,7 +27,10 @@ export default function Landing({ onLaunch }) {
           <span className="logo-icon">VR</span>
           <span className="logo-text">VanaRaksha<span className="highlight"> / field intelligence</span></span>
         </div>
-        <span className="landing-live-status"><span className="landing-live-dot"></span>Live</span>
+        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+          <a href="/login.html" className="btn-outline" style={{padding: '0.4rem 1rem', fontSize: '0.875rem', textDecoration: 'none'}}>Ranger Login</a>
+          <span className="landing-live-status"><span className="landing-live-dot"></span>Live</span>
+        </div>
       </nav>
 
       <main className="landing-main">
