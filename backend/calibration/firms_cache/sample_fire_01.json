@@ -1,0 +1,20 @@
+[
+  {
+    "latitude": 30.1472,
+    "longitude": 78.5925,
+    "bright_ti4": 345.2,
+    "frp": 78.4,
+    "confidence": "nominal",
+    "satellite": "VIIRS_SNPP",
+    "acq_time": "1430"
+  },
+  {
+    "latitude": 30.1490,
+    "longitude": 78.5940,
+    "bright_ti4": 352.0,
+    "frp": 125.1,
+    "confidence": "high",
+    "satellite": "VIIRS_SNPP",
+    "acq_time": "1430"
+  }
+]

@@ -4,6 +4,9 @@ node_modules/
 # Build output
 dist/
 
+# # Local backend source
+# /backend/
+
 # Environment variables
 .env
 .env.local

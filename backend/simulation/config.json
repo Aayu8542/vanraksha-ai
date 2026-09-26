@@ -1,0 +1,43 @@
+{
+    "simulation": {
+        "cell_size_m": 100,
+        "time_step_min": 10,
+        "num_steps": 6,
+        "ensemble_size": 15,
+        "core_threshold_pct": 0.70,
+        "radius_km": 3
+    },
+    "model_weights": {
+        "base_ignition_prob": 0.1,
+        "w_wind_alignment": 0.4,
+        "w_upslope_bonus": 0.3,
+        "w_fuel_dryness": 0.3
+    },
+    "ensemble_perturbations": {
+        "wind_dir_deg_max": 15,
+        "wind_speed_pct_max": 0.20
+    },
+    "stage5_refinement": {
+        "firms_buffer_km": 5,
+        "firms_time_window_hours": 3,
+        "viirs_pixel_m": 187.5,
+        "modis_pixel_m": 500.0,
+        "intensity_thresholds": {
+            "medium": 50,
+            "high": 200
+        },
+        "overlap_thresholds": {
+            "high_confidence_pct": 0.60,
+            "partial_deviation_pct": 0.20
+        },
+        "resimulate_steps": 6
+    },
+    "stage6_escalation": {
+        "core_area_threshold_ha": 5.0,
+        "emails": {
+            "range_email": "range_officer@vanaraksha.in",
+            "division_email": "dfo@vanaraksha.in",
+            "sdma_ndma_email": "emergency@sdma.gov.in"
+        }
+    }
+}
