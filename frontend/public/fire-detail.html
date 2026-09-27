@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Public fire simulation detail from VanaRaksha AI" />
+    <title>Fire Event Detail — VanaRaksha AI</title>
+  </head>
+  <body>
+    <p>Opening fire event…</p>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      params.set('view', 'fire-simulation');
+      window.location.replace(`/?${params.toString()}`);
+    </script>
+  </body>
+</html>

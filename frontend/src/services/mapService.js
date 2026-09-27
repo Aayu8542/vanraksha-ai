@@ -5,11 +5,7 @@ import { createCircleCoords, generateNDVIGrid, ndviLabel, threatColor } from '..
 export function createForestMap(container, { year, onCoords, onMapClick, onSelectFeature }) {
   const map = new maplibregl.Map({
     container,
-    style: {
-      version: 8,
-      sources: { 'carto-dark': { type: 'raster', tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'], tileSize: 256, attribution: '© CARTO © OpenStreetMap' } },
-      layers: [{ id: 'carto-dark', type: 'raster', source: 'carto-dark' }]
-    },
+    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
     center: [82.8, 21.5], zoom: 5, minZoom: 4, maxZoom: 14
   });
 
@@ -108,18 +104,18 @@ export function renderGBIFLayer(map, occurrences, visible = false) {
   if (map.getLayer('gbif-clusters')) map.removeLayer('gbif-clusters');
   if (map.getLayer('gbif-cluster-count')) map.removeLayer('gbif-cluster-count');
   if (map.getSource('gbif-source')) map.removeSource('gbif-source');
-  const features = occurrences.map((o,i)=>({type:'Feature',properties:{species:o.species,color:o.color,dot:o.dot,emoji:o.emoji,id:i},geometry:{type:'Point',coordinates:[o.lng,o.lat]}}));
-  map.addSource('gbif-source',{type:'geojson',data:{type:'FeatureCollection',features},cluster:true,clusterMaxZoom:8,clusterRadius:40});
-  map.addLayer({id:'gbif-clusters',type:'circle',source:'gbif-source',filter:['has','point_count'],paint:{'circle-color':['step',['get','point_count'],'#27a057',10,'#f59e0b',30,'#ef4444'],'circle-radius':['step',['get','point_count'],14,10,20,30,28],'circle-stroke-width':2,'circle-stroke-color':'#fff'},layout:{visibility:visible?'visible':'none'}});
-  map.addLayer({id:'gbif-cluster-count',type:'symbol',source:'gbif-source',filter:['has','point_count'],layout:{'text-field':'{point_count_abbreviated}','text-size':11,visibility:visible?'visible':'none'},paint:{'text-color':'#fff'}});
-  map.addLayer({id:'gbif-layer',type:'circle',source:'gbif-source',filter:['!', ['has','point_count']],paint:{'circle-radius':['get','dot'],'circle-color':['get','color'],'circle-stroke-width':1.5,'circle-stroke-color':'#fff','circle-opacity':.85},layout:{visibility:visible?'visible':'none'}});
+  const features = occurrences.map((o, i) => ({ type: 'Feature', properties: { species: o.species, color: o.color, dot: o.dot, emoji: o.emoji, id: i }, geometry: { type: 'Point', coordinates: [o.lng, o.lat] } }));
+  map.addSource('gbif-source', { type: 'geojson', data: { type: 'FeatureCollection', features }, cluster: true, clusterMaxZoom: 8, clusterRadius: 40 });
+  map.addLayer({ id: 'gbif-clusters', type: 'circle', source: 'gbif-source', filter: ['has', 'point_count'], paint: { 'circle-color': ['step', ['get', 'point_count'], '#27a057', 10, '#f59e0b', 30, '#ef4444'], 'circle-radius': ['step', ['get', 'point_count'], 14, 10, 20, 30, 28], 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' }, layout: { visibility: visible ? 'visible' : 'none' } });
+  map.addLayer({ id: 'gbif-cluster-count', type: 'symbol', source: 'gbif-source', filter: ['has', 'point_count'], layout: { 'text-field': '{point_count_abbreviated}', 'text-size': 11, visibility: visible ? 'visible' : 'none' }, paint: { 'text-color': '#fff' } });
+  map.addLayer({ id: 'gbif-layer', type: 'circle', source: 'gbif-source', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': ['get', 'dot'], 'circle-color': ['get', 'color'], 'circle-stroke-width': 1.5, 'circle-stroke-color': '#fff', 'circle-opacity': .85 }, layout: { visibility: visible ? 'visible' : 'none' } });
 }
 
-export function renderAQILayer(map, cities, visible=false) {
+export function renderAQILayer(map, cities, visible = false) {
   if (!map?.isStyleLoaded?.()) return;
   if (map.getLayer('aqi-layer')) map.removeLayer('aqi-layer');
   if (map.getSource('aqi-source')) map.removeSource('aqi-source');
-  const features=cities.filter(c=>Number.isFinite(Number(c.lng))&&Number.isFinite(Number(c.lat))).map(c=>({type:'Feature',properties:{city:c.city,aqi:c.aqi??'—'},geometry:{type:'Point',coordinates:[Number(c.lng),Number(c.lat)]}}));
-  map.addSource('aqi-source',{type:'geojson',data:{type:'FeatureCollection',features}});
-  map.addLayer({id:'aqi-layer',type:'circle',source:'aqi-source',paint:{'circle-radius':8,'circle-color':'#38bdf8','circle-stroke-color':'#fff','circle-stroke-width':1.5,'circle-opacity':.85},layout:{visibility:visible?'visible':'none'}});
+  const features = cities.filter(c => Number.isFinite(Number(c.lng)) && Number.isFinite(Number(c.lat))).map(c => ({ type: 'Feature', properties: { city: c.city, aqi: c.aqi ?? '—' }, geometry: { type: 'Point', coordinates: [Number(c.lng), Number(c.lat)] } }));
+  map.addSource('aqi-source', { type: 'geojson', data: { type: 'FeatureCollection', features } });
+  map.addLayer({ id: 'aqi-layer', type: 'circle', source: 'aqi-source', paint: { 'circle-radius': 8, 'circle-color': '#38bdf8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5, 'circle-opacity': .85 }, layout: { visibility: visible ? 'visible' : 'none' } });
 }

@@ -15,18 +15,18 @@ export const ALERTS = [
 
 // ------- Protected Zones -------
 export const PROTECTED_ZONES = [
-  { id: 'z1', name: 'Jim Corbett National Park', state: 'Uttarakhand', type: 'national-park', typeName: 'National Park', area: 1318, established: 1936, ndvi: 0.82, threat: 28, lat: 29.5, lng: 78.9, species: ['Tiger','Leopard','Asian Elephant'], icon: '🐯' },
-  { id: 'z2', name: 'Kaziranga National Park', state: 'Assam', type: 'national-park', typeName: 'National Park', area: 858, established: 1974, ndvi: 0.79, threat: 45, lat: 26.6, lng: 93.4, species: ['One-horned Rhinoceros','Tiger','Wild Buffalo'], icon: '🦏' },
-  { id: 'z3', name: 'Sundarbans National Park', state: 'West Bengal', type: 'national-park', typeName: 'National Park', area: 1330, established: 1984, ndvi: 0.71, threat: 62, lat: 21.9, lng: 88.9, species: ['Royal Bengal Tiger','Irrawaddy Dolphin','Estuarine Crocodile'], icon: '🐅' },
-  { id: 'z4', name: 'Bandipur Tiger Reserve', state: 'Karnataka', type: 'tiger-reserve', typeName: 'Tiger Reserve', area: 874, established: 1974, ndvi: 0.76, threat: 38, lat: 11.7, lng: 76.6, species: ['Tiger','Leopard','Gaur','Wild Dog'], icon: '🐆' },
-  { id: 'z5', name: 'Pench Tiger Reserve', state: 'Madhya Pradesh', type: 'tiger-reserve', typeName: 'Tiger Reserve', area: 758, established: 1977, ndvi: 0.69, threat: 41, lat: 22.0, lng: 79.8, species: ['Tiger','Leopard','Nilgai','Indian Wild Dog'], icon: '🐯' },
-  { id: 'z6', name: 'Silent Valley NP', state: 'Kerala', type: 'national-park', typeName: 'National Park', area: 237, established: 1980, ndvi: 0.88, threat: 22, lat: 11.1, lng: 76.4, species: ['Lion-tailed Macaque','Tiger','Elephant'], icon: '🐒' },
-  { id: 'z7', name: 'Simlipal National Park', state: 'Odisha', type: 'national-park', typeName: 'National Park', area: 2750, established: 1980, ndvi: 0.74, threat: 67, lat: 21.6, lng: 86.5, species: ['Tiger','Elephant','Gaur'], icon: '🌿' },
-  { id: 'z8', name: 'Namdapha NP', state: 'Arunachal Pradesh', type: 'national-park', typeName: 'National Park', area: 1985, established: 1983, ndvi: 0.91, threat: 18, lat: 27.4, lng: 96.4, species: ['Snow Leopard','Cloud Leopard','Red Panda'], icon: '🐼' },
-  { id: 'z9', name: 'Gulf of Mannar', state: 'Tamil Nadu', type: 'biosphere', typeName: 'Biosphere Reserve', area: 10500, established: 1989, ndvi: 0.55, threat: 55, lat: 9.1, lng: 79.1, species: ['Dugong','Sea Turtle','Dolphins'], icon: '🐢' },
-  { id: 'z10', name: 'Nokrek Biosphere', state: 'Meghalaya', type: 'biosphere', typeName: 'Biosphere Reserve', area: 820, established: 1988, ndvi: 0.85, threat: 30, lat: 25.5, lng: 90.2, species: ['Red Panda','Elephant','Hoolock Gibbon'], icon: '🌳' },
-  { id: 'z11', name: 'Periyar Wildlife Sanctuary', state: 'Kerala', type: 'wildlife-sanctuary', typeName: 'Wildlife Sanctuary', area: 925, established: 1950, ndvi: 0.80, threat: 25, lat: 9.5, lng: 77.2, species: ['Tiger','Elephant','Gaur'], icon: '🐘' },
-  { id: 'z12', name: 'Kanha Tiger Reserve', state: 'Madhya Pradesh', type: 'tiger-reserve', typeName: 'Tiger Reserve', area: 2052, established: 1974, ndvi: 0.78, threat: 33, lat: 22.3, lng: 80.6, species: ['Tiger','Barasingha','Leopard'], icon: '🦌' },
+  { id: 'z1', name: 'Jim Corbett National Park', state: 'Uttarakhand', type: 'national-park', typeName: 'National Park', area: 1318, established: 1936, ndvi: 0.82, threat: 28, lat: 29.5, lng: 78.9, species: ['Tiger', 'Leopard', 'Asian Elephant'], icon: '🐯' },
+  { id: 'z2', name: 'Kaziranga National Park', state: 'Assam', type: 'national-park', typeName: 'National Park', area: 858, established: 1974, ndvi: 0.79, threat: 45, lat: 26.6, lng: 93.4, species: ['One-horned Rhinoceros', 'Tiger', 'Wild Buffalo'], icon: '🦏' },
+  { id: 'z3', name: 'Sundarbans National Park', state: 'West Bengal', type: 'national-park', typeName: 'National Park', area: 1330, established: 1984, ndvi: 0.71, threat: 62, lat: 21.9, lng: 88.9, species: ['Royal Bengal Tiger', 'Irrawaddy Dolphin', 'Estuarine Crocodile'], icon: '🐅' },
+  { id: 'z4', name: 'Bandipur Tiger Reserve', state: 'Karnataka', type: 'tiger-reserve', typeName: 'Tiger Reserve', area: 874, established: 1974, ndvi: 0.76, threat: 38, lat: 11.7, lng: 76.6, species: ['Tiger', 'Leopard', 'Gaur', 'Wild Dog'], icon: '🐆' },
+  { id: 'z5', name: 'Pench Tiger Reserve', state: 'Madhya Pradesh', type: 'tiger-reserve', typeName: 'Tiger Reserve', area: 758, established: 1977, ndvi: 0.69, threat: 41, lat: 22.0, lng: 79.8, species: ['Tiger', 'Leopard', 'Nilgai', 'Indian Wild Dog'], icon: '🐯' },
+  { id: 'z6', name: 'Silent Valley NP', state: 'Kerala', type: 'national-park', typeName: 'National Park', area: 237, established: 1980, ndvi: 0.88, threat: 22, lat: 11.1, lng: 76.4, species: ['Lion-tailed Macaque', 'Tiger', 'Elephant'], icon: '🐒' },
+  { id: 'z7', name: 'Simlipal National Park', state: 'Odisha', type: 'national-park', typeName: 'National Park', area: 2750, established: 1980, ndvi: 0.74, threat: 67, lat: 21.6, lng: 86.5, species: ['Tiger', 'Elephant', 'Gaur'], icon: '🌿' },
+  { id: 'z8', name: 'Namdapha NP', state: 'Arunachal Pradesh', type: 'national-park', typeName: 'National Park', area: 1985, established: 1983, ndvi: 0.91, threat: 18, lat: 27.4, lng: 96.4, species: ['Snow Leopard', 'Cloud Leopard', 'Red Panda'], icon: '🐼' },
+  { id: 'z9', name: 'Gulf of Mannar', state: 'Tamil Nadu', type: 'biosphere', typeName: 'Biosphere Reserve', area: 10500, established: 1989, ndvi: 0.55, threat: 55, lat: 9.1, lng: 79.1, species: ['Dugong', 'Sea Turtle', 'Dolphins'], icon: '🐢' },
+  { id: 'z10', name: 'Nokrek Biosphere', state: 'Meghalaya', type: 'biosphere', typeName: 'Biosphere Reserve', area: 820, established: 1988, ndvi: 0.85, threat: 30, lat: 25.5, lng: 90.2, species: ['Red Panda', 'Elephant', 'Hoolock Gibbon'], icon: '🌳' },
+  { id: 'z11', name: 'Periyar Wildlife Sanctuary', state: 'Kerala', type: 'wildlife-sanctuary', typeName: 'Wildlife Sanctuary', area: 925, established: 1950, ndvi: 0.80, threat: 25, lat: 9.5, lng: 77.2, species: ['Tiger', 'Elephant', 'Gaur'], icon: '🐘' },
+  { id: 'z12', name: 'Kanha Tiger Reserve', state: 'Madhya Pradesh', type: 'tiger-reserve', typeName: 'Tiger Reserve', area: 2052, established: 1974, ndvi: 0.78, threat: 33, lat: 22.3, lng: 80.6, species: ['Tiger', 'Barasingha', 'Leopard'], icon: '🦌' },
 ];
 
 // ------- Endangered Species -------
@@ -43,16 +43,16 @@ export const SPECIES_DATA = [
 
 // ------- Deforestation time series -------
 export const YEARLY_DATA = {
-  years: [2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024],
-  forestCover: [776520,773100,769800,765200,761000,757400,753200,749800,746500,742300,738000,734200,729800,726500,722100,718400,715200,711800,708900,706200,703800,710400,707500,711000,713789],
-  defoRate:    [8200, 6800, 7100, 7600, 6900, 7200, 8100, 7900, 7600, 8000, 8200, 7800, 8800, 7900, 8800, 7100, 6700, 7200, 5800, 4900, 5100, 4600, 5800, 4700, 4300],
-  ndvi:        [0.72, 0.71, 0.70, 0.70, 0.69, 0.68, 0.68, 0.67, 0.67, 0.66, 0.66, 0.65, 0.65, 0.65, 0.64, 0.64, 0.65, 0.65, 0.66, 0.66, 0.67, 0.68, 0.68, 0.69, 0.70],
+  years: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+  forestCover: [776520, 773100, 769800, 765200, 761000, 757400, 753200, 749800, 746500, 742300, 738000, 734200, 729800, 726500, 722100, 718400, 715200, 711800, 708900, 706200, 703800, 710400, 707500, 711000, 713789],
+  defoRate: [8200, 6800, 7100, 7600, 6900, 7200, 8100, 7900, 7600, 8000, 8200, 7800, 8800, 7900, 8800, 7100, 6700, 7200, 5800, 4900, 5100, 4600, 5800, 4700, 4300],
+  ndvi: [0.72, 0.71, 0.70, 0.70, 0.69, 0.68, 0.68, 0.67, 0.67, 0.66, 0.66, 0.65, 0.65, 0.65, 0.64, 0.64, 0.65, 0.65, 0.66, 0.66, 0.67, 0.68, 0.68, 0.69, 0.70],
   carbonStock: [5220, 5190, 5165, 5130, 5095, 5060, 5025, 4995, 4960, 4925, 4890, 4858, 4820, 4790, 4755, 4726, 4700, 4672, 4648, 4625, 4604, 4640, 4618, 4645, 4680]
 };
 
 // ------- State-level deforestation (2024 top 8) -------
 export const STATE_LOSS = {
-  states: ['Assam','MP','Odisha','Maharashtra','Andhra Pradesh','Chhattisgarh','Uttarakhand','Jharkhand'],
+  states: ['Assam', 'MP', 'Odisha', 'Maharashtra', 'Andhra Pradesh', 'Chhattisgarh', 'Uttarakhand', 'Jharkhand'],
   loss2024: [420, 380, 310, 290, 260, 250, 210, 190]
 };
 
@@ -83,9 +83,9 @@ export const DEFORESTATION_ZONES = [
 
 // ------- Species corridors -------
 export const CORRIDORS = [
-  { name: 'Pench – Kanha Corridor', points: [[22.0,79.8],[22.2,80.1],[22.3,80.6]], width: 3, species: 'Tiger' },
-  { name: 'Corbett – Rajaji Corridor', points: [[29.5,78.9],[29.8,78.0],[30.1,77.9]], width: 3, species: 'Elephant' },
-  { name: 'Anamalai – Mundanthurai', points: [[10.4,77.1],[9.8,77.2],[9.1,77.4]], width: 3, species: 'Elephant+Tiger' },
+  { name: 'Pench – Kanha Corridor', points: [[22.0, 79.8], [22.2, 80.1], [22.3, 80.6]], width: 3, species: 'Tiger' },
+  { name: 'Corbett – Rajaji Corridor', points: [[29.5, 78.9], [29.8, 78.0], [30.1, 77.9]], width: 3, species: 'Elephant' },
+  { name: 'Anamalai – Mundanthurai', points: [[10.4, 77.1], [9.8, 77.2], [9.1, 77.4]], width: 3, species: 'Elephant+Tiger' },
 ];
 
 // ------- Search Index -------

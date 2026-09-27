@@ -1,0 +1,16 @@
+:root {
+  --bg-paper: #EDEEE6;
+  --bg-map-dark: #14261E;
+  --ink-primary: #14261E;
+  --ink-muted: #4A5A50;
+  --accent-forest: #2D5940;
+  --accent-forest-dark: #1C3328;
+  --border-hairline: #D8D6CB;
+  --risk-low: #7A9B76;
+  --risk-moderate: #C9A227;
+  --risk-high: #C4622D;
+  --risk-very-high: #A73B2D;
+  --risk-extreme: #6B1B1B;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}

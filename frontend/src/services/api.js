@@ -1,5 +1,36 @@
 import { GBIF_SPECIES_SEED, AQI_SEED } from '../data/phase2Seed.js';
 
+const BACKEND_URL = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+
+async function requestBackend(path, options = {}) {
+  if (!BACKEND_URL) {
+    throw new Error('Set VITE_API_BASE_URL in the frontend deployment to connect to the backend.');
+  }
+
+  const response = await fetch(`${BACKEND_URL}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Backend request failed (${response.status})`);
+  return data;
+}
+
+export function createBackendSimulation(payload) {
+  return requestBackend('/api/simulation/start', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function runBackendSimulation(simulationId) {
+  return requestBackend(`/api/simulation/${encodeURIComponent(simulationId)}/run`, { method: 'POST' });
+}
+
+export function getBackendSimulation(simulationId) {
+  return requestBackend(`/api/simulation/${encodeURIComponent(simulationId)}`);
+}
+
 export async function fetchGBIFOccurrences() {
   const result = [];
   for (const sp of GBIF_SPECIES_SEED) {
