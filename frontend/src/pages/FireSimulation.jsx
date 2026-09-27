@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import { createBackendSimulation, getBackendSimulation, runBackendSimulation } from '../services/api.js';
+import {
+  advanceBackendFireCycle,
+  createBackendSimulation,
+  getBackendSimulation,
+  getBackendSimulationOutputs,
+  runBackendSimulation,
+  updateBackendFireStatus
+} from '../services/api.js';
 
 const RISK_TOKEN = {
   Low: '--risk-low',
@@ -12,11 +19,18 @@ const RISK_TOKEN = {
 const PRIORITY_TOKEN = { Critical: '--risk-extreme', High: '--risk-high', Standard: '--risk-moderate' };
 const PRIORITIES = ['Critical', 'High', 'Standard'];
 const BACKEND_RISK_LABEL = { LOW: 'Low', MODERATE: 'Moderate', HIGH: 'High', VERY_HIGH: 'Very High', CRITICAL: 'Extreme' };
+const OUTPUT_TABS = [
+  { id: 'risk', label: 'Risk map' },
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'biodiversity', label: 'Biodiversity' },
+  { id: 'response', label: 'Response' },
+  { id: 'events', label: 'Events' }
+];
 
 function toFireRecord(simulation) {
   return {
     fire_id: simulation.simulation_id,
-    core_polygon: simulation.fire_perimeter,
+    core_polygon: simulation.risk_map || simulation.fire_perimeter,
     uncertainty_polygon: simulation.fire_spread,
     wind_used: {},
     priority_list: [],
@@ -24,9 +38,20 @@ function toFireRecord(simulation) {
     intensity: `${simulation.risk?.score ?? '—'} / 100`,
     generated_at: simulation.created_at,
     backend_status: simulation.status,
+    risk: simulation.risk,
     timeline: simulation.timeline || [],
-    affected_assets: simulation.affected_assets || {}
+    affected_assets: simulation.affected_assets || {},
+    data_sources: simulation.data_sources || []
   };
+}
+
+function displayName(value) {
+  return String(value).replaceAll('_', ' ');
+}
+
+function formatTimestamp(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
 function tokenColor(token) {
@@ -161,6 +186,102 @@ function FireSkeleton() {
   </div>;
 }
 
+function SimulationOutputView({ tab, fire, outputs, loading, onRetry }) {
+  if (loading) return <p className="fire-output-empty">Loading simulation outputs…</p>;
+  if (!outputs) return <div className="fire-output-empty"><p>Simulation output details are unavailable.</p><button type="button" onClick={onRetry}>Retry</button></div>;
+
+  if (tab === 'risk') {
+    const features = outputs.riskMap?.features || [];
+    const contributors = Object.entries(fire.risk?.contributors || {});
+    const weights = fire.risk?.weights || {};
+    return <div className="fire-output-view">
+      <div className="fire-output-heading"><h2>Risk map</h2><span>{features.length} zone{features.length === 1 ? '' : 's'}</span></div>
+      <p className="fire-output-description">Estimated risk zones are drawn on the map. Contributor values are normalized from 0 to 1.</p>
+      {features.map((feature, index) => <div className="fire-risk-zone" key={`risk-zone-${index}`}>
+        <strong>{feature.properties?.risk_class || fire.risk?.class || 'Unclassified'}</strong>
+        <span>{feature.properties?.risk_score ?? fire.risk?.score ?? '—'} / 100</span>
+      </div>)}
+      <div className="fire-risk-list">
+        {contributors.map(([name, value]) => <div className="fire-risk-row" key={name}>
+          <div className="fire-risk-label"><span>{displayName(name)}</span><strong>{Math.round(Number(value) * 100)}%</strong></div>
+          <div className="fire-risk-bar"><span style={{ width: `${Math.max(0, Math.min(100, Number(value) * 100))}%` }} /></div>
+          <small>Model weight {Math.round(Number(weights[name] || 0) * 100)}%</small>
+        </div>)}
+      </div>
+      {!!fire.data_sources?.length && <div className="fire-data-sources">
+        <h3>Data provenance</h3>
+        {fire.data_sources.map((source, index) => <article key={`${source.name}-${index}`}>
+          <strong>{source.name}</strong><span>{source.kind}</span><small>{source.details}</small>
+        </article>)}
+      </div>}
+    </div>;
+  }
+
+  if (tab === 'timeline') {
+    const timeline = outputs.timeline || [];
+    const maxArea = Math.max(1, ...timeline.map(point => Number(point.burned_area_ha) || 0));
+    return <div className="fire-output-view">
+      <div className="fire-output-heading"><h2>Spread timeline</h2><span>{timeline.length} steps</span></div>
+      <div className="fire-timeline-list">
+        {timeline.map((point, index) => <article className="fire-timeline-row" key={`${point.time_minutes}-${index}`}>
+          <strong>{point.time_minutes} min</strong>
+          <div className="fire-timeline-track"><span style={{ width: `${Math.max(3, (Number(point.burned_area_ha) / maxArea) * 100)}%` }} /></div>
+          <span>{point.burned_area_ha} ha</span>
+          <small>Risk {point.risk_score} · {point.active_cells} active cells</small>
+        </article>)}
+        {!timeline.length && <p className="fire-output-empty">No timeline points were returned.</p>}
+      </div>
+    </div>;
+  }
+
+  if (tab === 'biodiversity') {
+    const biodiversity = outputs.biodiversity || {};
+    return <div className="fire-output-view">
+      <div className="fire-output-heading"><h2>Biodiversity impact</h2><span>{biodiversity.estimated ? 'Estimated' : 'Observed'}</span></div>
+      <dl className="fire-output-dl">
+        <dt>Affected area</dt><dd>{biodiversity.affected_area_ha ?? '—'} ha</dd>
+        <dt>Protected areas affected</dt><dd>{biodiversity.protected_areas_affected ?? 0}</dd>
+        <dt>Threatened species affected</dt><dd>{biodiversity.threatened_species_affected ?? 0}</dd>
+        <dt>Priority score</dt><dd>{biodiversity.priority_score ?? '—'} / 100</dd>
+      </dl>
+      <p className="fire-output-description">Species counts are estimates; the current backend does not include a local species-habitat dataset.</p>
+    </div>;
+  }
+
+  if (tab === 'response') {
+    const response = outputs.response || {};
+    const units = response.units || [];
+    return <div className="fire-output-view">
+      <div className="fire-output-heading"><h2>Response plan</h2><span>{response.estimated ? 'Estimated' : 'Operational'}</span></div>
+      <dl className="fire-output-dl">
+        <dt>Available units</dt><dd>{units.length}</dd>
+        <dt>Nearest unit</dt><dd>{response.nearest_unit_km == null ? 'Unavailable' : `${response.nearest_unit_km} km`}</dd>
+        <dt>Response estimate</dt><dd>{response.estimated_response_minutes == null ? 'Unavailable' : `${response.estimated_response_minutes} min`}</dd>
+      </dl>
+      {units.length ? <div className="fire-response-units">{units.map((unit, index) => <article key={unit.unit_id || unit.id || index}>
+        <strong>{unit.name || unit.unit_id || unit.id || `Response unit ${index + 1}`}</strong>
+        <span>{[unit.status, unit.distance_km == null ? null : `${unit.distance_km} km away`].filter(Boolean).join(' · ') || 'Details unavailable'}</span>
+      </article>)}</div> : <p className="fire-output-description">{response.note || 'No response units are available in the backend dataset.'}</p>}
+    </div>;
+  }
+
+  const events = outputs.events || [];
+  return <div className="fire-output-view">
+    <div className="fire-output-heading"><h2>Event history</h2><span>{events.length} events</span></div>
+    <div className="fire-event-list">
+      {events.map((event, index) => {
+        const details = Object.entries(event.data || {}).map(([key, value]) => `${displayName(key)}: ${value}`).join(' · ');
+        return <article key={`${event.event}-${index}`}>
+          <div><strong>{displayName(event.event?.replace('simulation.', '') || 'event')}</strong><span>{event.status}</span></div>
+          <time>{formatTimestamp(event.timestamp)}</time>
+          {details && <small>{details}</small>}
+        </article>;
+      })}
+      {!events.length && <p className="fire-output-empty">No lifecycle events were returned.</p>}
+    </div>
+  </div>;
+}
+
 export default function FireSimulation() {
   const [fireId, setFireId] = useState(() => new URLSearchParams(window.location.search).get('fire_id') || '');
   const [inputValue, setInputValue] = useState(fireId);
@@ -171,6 +292,12 @@ export default function FireSimulation() {
   const [error, setError] = useState('');
   const [backendError, setBackendError] = useState('');
   const [backendLoading, setBackendLoading] = useState(false);
+  const [backendOutputs, setBackendOutputs] = useState(null);
+  const [outputsLoading, setOutputsLoading] = useState(false);
+  const [activeOutputTab, setActiveOutputTab] = useState('risk');
+  const [legacyStatus, setLegacyStatus] = useState('Contained');
+  const [legacyActionLoading, setLegacyActionLoading] = useState(false);
+  const [legacyActionMessage, setLegacyActionMessage] = useState('');
 
   const loadFire = useCallback(async id => {
     if (!id) return;
@@ -206,23 +333,47 @@ export default function FireSimulation() {
     setFireId(nextId);
   };
 
+  const loadBackendOutputs = async simulationId => {
+    setOutputsLoading(true);
+    try {
+      const outputs = await getBackendSimulationOutputs(simulationId);
+      setBackendOutputs(outputs);
+      setFire(current => current?.fire_id === simulationId ? {
+        ...current,
+        core_polygon: outputs.riskMap,
+        uncertainty_polygon: outputs.fireSpread,
+        timeline: outputs.timeline
+      } : current);
+    } catch (caught) {
+      setBackendOutputs(null);
+      setBackendError(caught?.message || 'Simulation outputs could not be loaded.');
+    } finally {
+      setOutputsLoading(false);
+    }
+  };
+
   const submitBackendSimulation = async event => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setBackendLoading(true);
     setBackendError('');
+    setBackendOutputs(null);
     try {
       const created = await createBackendSimulation({
         latitude: Number(form.get('latitude')),
         longitude: Number(form.get('longitude')),
         radius: Number(form.get('radius')),
         duration_minutes: Number(form.get('duration_minutes')),
-        scenario: form.get('scenario')
+        time_step_minutes: Number(form.get('time_step_minutes')),
+        scenario: form.get('scenario'),
+        fire_id: form.get('fire_id') || 'sample_fire_01'
       });
       const completed = await runBackendSimulation(created.simulation_id);
       setFire(toFireRecord(completed));
       setIsBackendFire(true);
+      setActiveOutputTab('risk');
       setNotFound(false);
+      await loadBackendOutputs(created.simulation_id);
     } catch (caught) {
       setBackendError(caught?.message || 'The backend simulation could not be started.');
     } finally {
@@ -237,10 +388,40 @@ export default function FireSimulation() {
     try {
       const simulation = await getBackendSimulation(fire.fire_id);
       setFire(toFireRecord(simulation));
+      await loadBackendOutputs(fire.fire_id);
     } catch (caught) {
       setBackendError(caught?.message || 'The backend simulation could not be refreshed.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const advanceLegacyCycle = async () => {
+    setLegacyActionLoading(true);
+    setLegacyActionMessage('');
+    try {
+      const result = await advanceBackendFireCycle(fire.fire_id, true);
+      if (result.error) throw new Error(result.error);
+      setLegacyActionMessage(`Cycle ${result.cycle_count} completed. ${result.changes?.join(' ') || ''}`.trim());
+    } catch (caught) {
+      setLegacyActionMessage(caught?.message || 'Could not advance this fire cycle.');
+    } finally {
+      setLegacyActionLoading(false);
+    }
+  };
+
+  const updateLegacyStatus = async () => {
+    setLegacyActionLoading(true);
+    setLegacyActionMessage('');
+    try {
+      const result = await updateBackendFireStatus(fire.fire_id, legacyStatus);
+      if (result.error) throw new Error(result.error);
+      setFire(current => ({ ...current, final_status: legacyStatus }));
+      setLegacyActionMessage(result.message || `Fire marked as ${legacyStatus}.`);
+    } catch (caught) {
+      setLegacyActionMessage(caught?.message || 'Could not update this fire status.');
+    } finally {
+      setLegacyActionLoading(false);
     }
   };
   const items = fire?.priority_list || [];
@@ -254,12 +435,13 @@ export default function FireSimulation() {
     <aside className="fire-panel">
       <div className="fire-panel-heading">
         <div><span className="fire-eyebrow">{isBackendFire ? 'Live backend simulation' : 'Stage 4 + 5 output'}</span><h1>Fire event</h1></div>
+        {fire && isBackendFire && <button className="fire-new-button" type="button" onClick={() => { setFire(null); setIsBackendFire(false); setBackendOutputs(null); setBackendError(''); }} title="Start another simulation">New run</button>}
         {fire && <button className="fire-refresh-button" type="button" onClick={refresh} disabled={loading} aria-label="Refresh fire event" title="Refresh fire event">
           <svg viewBox="0 0 24 24" aria-hidden="true" className={loading ? 'is-spinning' : ''}><path d="M20 7v5h-5M4 17v-5h5" /><path d="M5.5 9a7 7 0 0 1 11.9-2L20 12M4 12l2.6 5a7 7 0 0 0 11.9-2" /></svg>
         </button>}
       </div>
 
-      {!fireId && <section className="fire-state-block fire-backend-form-block">
+      {!fireId && !isBackendFire && <section className="fire-state-block fire-backend-form-block">
         <h2>Run a new simulation</h2>
         <p>Send a location and scenario to the deployed wildfire simulation API.</p>
         <form className="fire-id-form" onSubmit={submitBackendSimulation}>
@@ -268,7 +450,9 @@ export default function FireSimulation() {
             <label>Longitude<input name="longitude" type="number" min="-180" max="180" step="any" defaultValue="78.5925" required /></label>
             <label>Radius (km)<input name="radius" type="number" min="0.1" max="50" step="any" defaultValue="3" required /></label>
             <label>Duration (minutes)<input name="duration_minutes" type="number" min="1" max="1440" step="1" defaultValue="120" required /></label>
+            <label>Time step (minutes)<input name="time_step_minutes" type="number" min="1" max="240" step="1" defaultValue="15" required /></label>
           </div>
+          <label>FIRMS cache ID<input name="fire_id" placeholder="sample_fire_01" /></label>
           <label>Scenario<select name="scenario" defaultValue="normal">
             <option value="normal">Normal</option>
             <option value="high_wind">High wind</option>
@@ -279,8 +463,9 @@ export default function FireSimulation() {
           </select></label>
           <button type="submit" disabled={backendLoading}>{backendLoading ? 'Running…' : 'Run simulation'}</button>
         </form>
-        {backendError && <div className="fire-message fire-message-error" role="alert"><strong>Backend request failed</strong><span>{backendError}</span></div>}
       </section>}
+
+      {backendError && <div className="fire-message fire-message-error" role="alert"><strong>Backend request failed</strong><span>{backendError}</span></div>}
 
       {!fire && !fireId && <section className="fire-state-block">
         <h2>Load a fire simulation</h2>
@@ -301,26 +486,49 @@ export default function FireSimulation() {
           <div className="fire-metric"><span>{isBackendFire ? 'Risk class' : 'Confidence'}</span><strong className="fire-confidence" style={{ '--confidence-color': tokenColor(RISK_TOKEN[confidence] || '--risk-moderate') }}>{confidence}</strong></div>
           <div className="fire-metric"><span>{isBackendFire ? 'Risk score' : 'Intensity'}</span><strong>{fire.intensity || '—'}</strong></div>
         </div>
-        {isBackendFire ? <div className="fire-backend-facts"><span>Status</span><strong>{fire.backend_status}</strong><span>Forecast steps</span><strong>{fire.timeline.length}</strong><span>Settlements / infrastructure</span><strong>{fire.affected_assets.settlements || 0} / {fire.affected_assets.infrastructure || 0}</strong></div> : <div className="fire-wind-row"><div><span>Wind used</span><strong>{wind.speed ?? '—'} · {wind.direction ?? '—'}</strong></div><WindArrow direction={wind.direction} /></div>}
-        {fire.simulation_deviation && <div className="fire-deviation-notice"><span className="fire-notice-icon">i</span><p>Observed spread differed from the original prediction. The simulation has been corrected to reflect the updated fire perimeter.</p></div>}
-        <section className="fire-priority-section">
-          <div className="fire-section-heading"><h2>Priority locations</h2><span>{items.length}</span></div>
-          <div className="fire-priority-list">
-            {PRIORITIES.map(priority => {
-              const group = items.filter(item => normalizedPriority(item.priority) === priority);
-              if (!group.length) return null;
-              return <div className="fire-priority-group" key={priority}>
-                <h3><span style={{ backgroundColor: tokenColor(PRIORITY_TOKEN[priority]) }} />{priority}<small>{group.length}</small></h3>
-                {group.map((item, index) => <article className="fire-priority-item" key={`${item.name}-${index}`}>
-                  <span className={`fire-item-shape ${markerShape(item.type)}`} style={{ '--marker-color': tokenColor(PRIORITY_TOKEN[priority]) }} />
-                  <div className="fire-item-copy"><strong>{item.name}</strong><span>{item.type}</span></div>
-                  <button type="button" className="fire-view-marker" onClick={() => window.__fireDetailMap?.flyTo({ center: [Number(item.lng), Number(item.lat)], zoom: 10, duration: 850 })}>View on map</button>
-                </article>)}
-              </div>;
-            })}
-            {!items.length && <p className="fire-empty-list">No priority locations recorded.</p>}
+        {isBackendFire ? <>
+          <div className="fire-backend-facts"><span>Status</span><strong>{fire.backend_status}</strong><span>Forecast steps</span><strong>{backendOutputs?.timeline.length ?? fire.timeline.length}</strong><span>Settlements / infrastructure</span><strong>{fire.affected_assets.settlements || 0} / {fire.affected_assets.infrastructure || 0}</strong></div>
+          <div className="fire-output-tabs" role="tablist" aria-label="Simulation outputs">
+            {OUTPUT_TABS.map(tab => <button key={tab.id} type="button" role="tab" aria-selected={activeOutputTab === tab.id} className={activeOutputTab === tab.id ? 'active' : ''} onClick={() => setActiveOutputTab(tab.id)}>{tab.label}</button>)}
           </div>
-        </section>
+          <section className="fire-output-panel" role="tabpanel">
+            <SimulationOutputView tab={activeOutputTab} fire={fire} outputs={backendOutputs} loading={outputsLoading} onRetry={() => loadBackendOutputs(fire.fire_id)} />
+          </section>
+        </> : <>
+          <div className="fire-wind-row"><div><span>Wind used</span><strong>{wind.speed ?? '—'} · {wind.direction ?? '—'}</strong></div><WindArrow direction={wind.direction} /></div>
+          {fire.simulation_deviation && <div className="fire-deviation-notice"><span className="fire-notice-icon">i</span><p>Observed spread differed from the original prediction. The simulation has been corrected to reflect the updated fire perimeter.</p></div>}
+          <section className="fire-priority-section">
+            <div className="fire-section-heading"><h2>Priority locations</h2><span>{items.length}</span></div>
+            <div className="fire-priority-list">
+              {PRIORITIES.map(priority => {
+                const group = items.filter(item => normalizedPriority(item.priority) === priority);
+                if (!group.length) return null;
+                return <div className="fire-priority-group" key={priority}>
+                  <h3><span style={{ backgroundColor: tokenColor(PRIORITY_TOKEN[priority]) }} />{priority}<small>{group.length}</small></h3>
+                  {group.map((item, index) => <article className="fire-priority-item" key={`${item.name}-${index}`}>
+                    <span className={`fire-item-shape ${markerShape(item.type)}`} style={{ '--marker-color': tokenColor(PRIORITY_TOKEN[normalizedPriority(item.priority)]) }} />
+                    <div className="fire-item-copy"><strong>{item.name}</strong><span>{item.type}</span></div>
+                    <button type="button" className="fire-view-marker" onClick={() => window.__fireDetailMap?.flyTo({ center: [Number(item.lng), Number(item.lat)], zoom: 10, duration: 850 })}>View on map</button>
+                  </article>)}
+                </div>;
+              })}
+              {!items.length && <p className="fire-empty-list">No priority locations recorded.</p>}
+            </div>
+          </section>
+          <section className="fire-legacy-actions">
+            <div className="fire-section-heading"><h2>Archived fire controls</h2></div>
+            <p>These actions require a matching Stage 4 archive on the backend.</p>
+            <button type="button" onClick={advanceLegacyCycle} disabled={legacyActionLoading}>{legacyActionLoading ? 'Working…' : 'Advance fire cycle'}</button>
+            <div className="fire-legacy-status">
+              <select aria-label="Final fire status" value={legacyStatus} onChange={event => setLegacyStatus(event.target.value)}>
+                <option>Contained</option><option>False Alarm</option><option>No Fire</option>
+              </select>
+              <button type="button" onClick={updateLegacyStatus} disabled={legacyActionLoading}>Set final status</button>
+            </div>
+            {fire.final_status && <span className="fire-legacy-current">Current status: {fire.final_status}</span>}
+            {legacyActionMessage && <p className="fire-legacy-message" role="status">{legacyActionMessage}</p>}
+          </section>
+        </>}
       </>}
     </aside>
   </div>;

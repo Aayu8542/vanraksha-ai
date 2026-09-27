@@ -9,7 +9,7 @@ async function requestBackend(path, options = {}) {
 
   const response = await fetch(`${BACKEND_URL}${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers }
+    headers: { ...(options.body == null ? {} : { 'Content-Type': 'application/json' }), ...options.headers }
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Backend request failed (${response.status})`);
@@ -29,6 +29,66 @@ export function runBackendSimulation(simulationId) {
 
 export function getBackendSimulation(simulationId) {
   return requestBackend(`/api/simulation/${encodeURIComponent(simulationId)}`);
+}
+
+export function getBackendSimulationOutput(simulationId, output) {
+  const supportedOutputs = new Set(['timeline', 'fire-spread', 'risk-map', 'biodiversity-impact', 'response-plan']);
+  if (!supportedOutputs.has(output)) throw new Error(`Unsupported simulation output: ${output}`);
+  return requestBackend(`/api/simulation/${encodeURIComponent(simulationId)}/${output}`);
+}
+
+export async function getBackendSimulationEvents(simulationId) {
+  if (!BACKEND_URL) {
+    throw new Error('Set VITE_API_BASE_URL in the frontend deployment to connect to the backend.');
+  }
+
+  const response = await fetch(`${BACKEND_URL}/api/simulation/${encodeURIComponent(simulationId)}/events`, {
+    headers: { Accept: 'text/event-stream' }
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    let message = `Backend request failed (${response.status})`;
+    try {
+      message = JSON.parse(text).error || message;
+    } catch {
+      message = text || message;
+    }
+    throw new Error(message);
+  }
+
+  return text.trim().split(/\r?\n\r?\n/).filter(Boolean).map(block => {
+    const eventName = block.match(/^event:\s*(.+)$/m)?.[1];
+    const data = block.match(/^data:\s*(.+)$/m)?.[1];
+    if (!data) return null;
+    const parsed = JSON.parse(data);
+    return { ...parsed, event: parsed.event || eventName };
+  }).filter(Boolean);
+}
+
+export async function getBackendSimulationOutputs(simulationId) {
+  const [timeline, fireSpread, riskMap, biodiversity, response, events] = await Promise.all([
+    getBackendSimulationOutput(simulationId, 'timeline'),
+    getBackendSimulationOutput(simulationId, 'fire-spread'),
+    getBackendSimulationOutput(simulationId, 'risk-map'),
+    getBackendSimulationOutput(simulationId, 'biodiversity-impact'),
+    getBackendSimulationOutput(simulationId, 'response-plan'),
+    getBackendSimulationEvents(simulationId)
+  ]);
+  return { timeline, fireSpread, riskMap, biodiversity, response, events };
+}
+
+export function advanceBackendFireCycle(fireId, demoMode = true) {
+  return requestBackend('/api/advance_cycle', {
+    method: 'POST',
+    body: JSON.stringify({ fire_id: fireId, demo_mode: demoMode })
+  });
+}
+
+export function updateBackendFireStatus(fireId, status) {
+  return requestBackend('/api/update_status', {
+    method: 'POST',
+    body: JSON.stringify({ fire_id: fireId, status })
+  });
 }
 
 export async function fetchGBIFOccurrences() {
