@@ -1,11 +1,67 @@
-from flask import Flask, request, jsonify
+from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
 import os
 import json
-from orchestrator import advance_fire_cycle
+try:
+    from .orchestrator import advance_fire_cycle
+    from .simulation_service import SimulationError, create_simulation, get_simulation, run_simulation
+    from .events import sse_encode
+except ImportError:
+    from orchestrator import advance_fire_cycle
+    from simulation_service import SimulationError, create_simulation, get_simulation, run_simulation
+    from events import sse_encode
 
 app = Flask(__name__)
 CORS(app) # Allow frontend to call the API
+
+
+def _simulation_error(error):
+    return jsonify({"error": str(error)}), 400
+
+
+@app.route('/api/simulation/start', methods=['POST'])
+def api_simulation_start():
+    try:
+        return jsonify(create_simulation(request.get_json(silent=True) or {})), 201
+    except SimulationError as error:
+        return _simulation_error(error)
+
+
+@app.route('/api/simulation/<simulation_id>/run', methods=['POST'])
+def api_simulation_run(simulation_id):
+    try:
+        return jsonify(run_simulation(simulation_id))
+    except SimulationError as error:
+        return _simulation_error(error)
+
+
+@app.route('/api/simulation/<simulation_id>', methods=['GET'])
+def api_simulation_get(simulation_id):
+    try:
+        return jsonify(get_simulation(simulation_id))
+    except SimulationError as error:
+        return jsonify({"error": str(error)}), 404
+
+
+@app.route('/api/simulation/<simulation_id>/<output>', methods=['GET'])
+def api_simulation_output(simulation_id, output):
+    if output not in {'timeline', 'fire-spread', 'risk-map', 'biodiversity-impact', 'response-plan'}:
+        return jsonify({"error": "Unknown simulation output"}), 404
+    try:
+        state = get_simulation(simulation_id)
+    except SimulationError as error:
+        return jsonify({"error": str(error)}), 404
+    output_key = {'fire-spread': 'fire_spread', 'risk-map': 'risk_map', 'biodiversity-impact': 'biodiversity', 'response-plan': 'response'}.get(output, output)
+    return jsonify(state[output_key])
+
+
+@app.route('/api/simulation/<simulation_id>/events', methods=['GET'])
+def api_simulation_events(simulation_id):
+    try:
+        state = get_simulation(simulation_id)
+    except SimulationError as error:
+        return jsonify({"error": str(error), "code": "SIMULATION_NOT_FOUND"}), 404
+    return Response(sse_encode(state.get("events", [])), mimetype="text/event-stream", headers={"Cache-Control": "no-cache"})
 
 @app.route('/api/advance_cycle', methods=['POST'])
 def api_advance_cycle():
